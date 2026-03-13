@@ -10,8 +10,8 @@
     "start": "react-native start",
     "start:reset": "react-native start --reset-cache",
     "test": "jest",
-    "backend:start": "node backend/src/server.js",
-    "dev:backend": "PORT=5004 node backend/src/server.js"
+    "backend:start": "node --env-file=backend/.env backend/src/server.js",
+    "dev:backend": "node --env-file=backend/.env backend/src/server.js"
   },
   "dependencies": {
     "@react-native-async-storage/async-storage": "^2.2.0",

@@ -26,7 +26,13 @@ const ChangePasswordScreen = ({ navigation }: any) => {
         return allRequestOK;
     };
 
-    const onGoBack = () => navigation.goBack();
+    const onGoBack = () => {
+        if (navigation.canGoBack()) {
+            navigation.goBack();
+            return;
+        }
+        navigation.navigate('LoginScreen');
+    };
 
     const onChangePassword = async () => {
         await setSubmittedTime(Date.now());
@@ -44,7 +50,7 @@ const ChangePasswordScreen = ({ navigation }: any) => {
                     },
                     setLoading
                 ).then((response) => {
-                    if (response) navigation.goBack();
+                    if (response) onGoBack();
                 });
             } catch (error) {
                 console.error(error);

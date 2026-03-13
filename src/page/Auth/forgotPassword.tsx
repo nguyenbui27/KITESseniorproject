@@ -8,7 +8,13 @@ const ForgotPasswordScreen = ({ navigation }: any) => {
     const [email, setEmail] = useState('');
     const [loading, setLoading] = useState<boolean>(false);
 
-    const onGoBack = () => navigation.goBack();
+    const onGoBack = () => {
+        if (navigation.canGoBack()) {
+            navigation.goBack();
+            return;
+        }
+        navigation.navigate('LoginScreen');
+    };
 
     const onSubmit = async () => {
         if (!email.trim()) return;

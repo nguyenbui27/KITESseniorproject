@@ -30,6 +30,14 @@ const ResetPasswordScreen = () => {
         return allRequestOK;
     };
 
+    const onGoBack = () => {
+        if (navigation.canGoBack()) {
+            navigation.goBack();
+            return;
+        }
+        navigation.navigate('LoginScreen');
+    };
+
     const onResetAsync = async () => {
         await setSubmittedTime(Date.now());
         if (isValidData()) {
@@ -63,7 +71,7 @@ const ResetPasswordScreen = () => {
                                 <InputPasswordCommon label={"New Password"} attribute={"newPassword"} dataAttribute={dataProfile.newPassword} isRequired={false} setData={setDataProfile} validate={validate} setValidate={setValidate} submittedTime={submittedTime} />
                                 <ButtonCommon title="Reset Password" onPress={onResetAsync} />
                                 <View style={styles.row}>
-                                    <TouchableOpacity onPress={() => navigation.goBack()}>
+                                    <TouchableOpacity onPress={onGoBack}>
                                         <Text style={styles.forgotPassword}>Go Back</Text>
                                     </TouchableOpacity>
                                 </View>

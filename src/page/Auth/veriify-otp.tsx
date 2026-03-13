@@ -8,7 +8,6 @@ import LoadingFullScreen from '../../infrastructure/common/components/controls/l
 const OtpVerificationScreen = () => {
     const navigation = useNavigation<any>();
     const [loading, setLoading] = useState<boolean>(false);
-    const [email, setEmail] = useState<string>('');
     const [accessCode, setAccessCode] = useState<string>('');
 
     const handleVerifyOtp = async () => {
@@ -28,37 +27,18 @@ const OtpVerificationScreen = () => {
         }
     };
 
-    const handleRequestAccessCode = async () => {
-        const normalizedEmail = email.trim().toLowerCase();
-        if (!normalizedEmail) {
+    const onGoBack = () => {
+        if (navigation.canGoBack()) {
+            navigation.goBack();
             return;
         }
-
-        try {
-            await authService.requestChildAccessCode(normalizedEmail, setLoading);
-        } catch (error) {
-            console.error(error);
-        }
+        navigation.navigate('LoginScreen');
     };
-
-    const onGoBack = () => navigation.goBack();
 
     return (
         <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.keyboardAvoid}>
             <View style={styles.container}>
-                <TextInput
-                    style={styles.emailInput}
-                    value={email}
-                    onChangeText={setEmail}
-                    autoCapitalize="none"
-                    keyboardType="email-address"
-                    placeholder="Parent email to receive access code"
-                    placeholderTextColor="#999"
-                />
-                <TouchableOpacity style={styles.requestButton} onPress={handleRequestAccessCode}>
-                    <Text style={styles.requestButtonText}>Send Access Code</Text>
-                </TouchableOpacity>
-                <Text style={styles.subtitle}>Please enter your 6-digit access code.</Text>
+                <Text style={styles.subtitle}>Enter the 6-digit access code</Text>
                 <TextInput
                     style={styles.codeInput}
                     value={accessCode}
@@ -84,25 +64,6 @@ const styles = StyleSheet.create({
     keyboardAvoid: { flex: 1 },
     container: { flex: 1, justifyContent: 'center', paddingHorizontal: 24, gap: 32, backgroundColor: "#FFF" },
     subtitle: { fontSize: 16, textAlign: 'center', color: '#333', marginBottom: 8 },
-    emailInput: {
-        borderWidth: 1,
-        borderColor: '#ddd',
-        borderRadius: 10,
-        height: 48,
-        paddingHorizontal: 12,
-        color: '#111',
-    },
-    requestButton: {
-        backgroundColor: '#4f3f97',
-        borderRadius: 10,
-        paddingVertical: 12,
-        alignItems: 'center',
-    },
-    requestButtonText: {
-        color: '#fff',
-        fontWeight: '700',
-        fontSize: 14,
-    },
     codeInput: {
         borderWidth: 2,
         borderColor: '#007BFF',

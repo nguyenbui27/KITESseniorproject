@@ -12,6 +12,7 @@ const defaultDb = {
   guardians: [],
   conversations: [],
   chatLogs: [],
+  signupVerifications: [],
 };
 
 async function ensureDb() {
@@ -39,6 +40,7 @@ async function readDb() {
       guardians: Array.isArray(parsed.guardians) ? parsed.guardians : [],
       conversations: Array.isArray(parsed.conversations) ? parsed.conversations : [],
       chatLogs: Array.isArray(parsed.chatLogs) ? parsed.chatLogs : [],
+      signupVerifications: Array.isArray(parsed.signupVerifications) ? parsed.signupVerifications : [],
     };
   } catch {
     return { ...defaultDb };

@@ -12,6 +12,7 @@ import ResetPasswordScreen from './src/page/Auth/resetPassword';
 import ChatSlugScreen from './src/page/chat/chatSlug';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import RegisterScreen from './src/page/Auth/register';
+import RegisterVerifyScreen from './src/page/Auth/register-verify';
 import OtpVerificationScreen from './src/page/Auth/veriify-otp';
 import ChangePasswordScreen from './src/page/Auth/changePassword';
 import EditProfile from './src/page/profile/components/editProfile';
@@ -50,6 +51,7 @@ const StackNavigator = () => {
             <Stack.Screen name={"DrawerMenu"} component={DrawerMenu} options={{ headerShown: false }} />
             <Stack.Screen name={Constants.Navigator.Auth.LoginScreen.value} component={LoginScreen} />
             <Stack.Screen name={"RegisterScreen"} component={RegisterScreen} />
+            <Stack.Screen name={"RegisterVerifyScreen"} component={RegisterVerifyScreen} />
             <Stack.Screen name={"OtpVerificationScreen"} component={OtpVerificationScreen} />
             <Stack.Screen name={"ForgotPasswordScreen"} component={ForgotPasswordScreen} />
             <Stack.Screen name={"ResetPasswordScreen"} component={ResetPasswordScreen} />

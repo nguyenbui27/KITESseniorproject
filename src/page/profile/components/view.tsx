@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import MainLayout from '../../../infrastructure/common/layouts/layout';
 import { useNavigation } from '@react-navigation/native';
 import authService from '../../../infrastructure/repositories/auth/auth.service';
@@ -18,10 +18,21 @@ const ViewProfile = () => {
         fetchProfile().then(() => { });
     }, []);
 
+    const onGoBack = () => {
+        if (navigation.canGoBack()) {
+            navigation.goBack();
+            return;
+        }
+        navigation.navigate('Account');
+    };
+
     return (
-        <MainLayout title={'Profile details'} isBackButton={true} onGoBack={() => navigation.goBack()} noSpaceEnd={true}>
+        <MainLayout title={'Profile details'} isBackButton={true} onGoBack={onGoBack} noSpaceEnd={true}>
             <View style={styles.container}>
                 <ScrollView>
+                    <TouchableOpacity onPress={onGoBack} style={styles.backButton}>
+                        <Text style={styles.backButtonText}>← Go Back</Text>
+                    </TouchableOpacity>
                     <View style={styles.infoRow}>
                         <Text style={styles.label}>Name</Text>
                         <Text style={styles.value}>{profile.name || '--'}</Text>
@@ -51,6 +62,15 @@ const styles = StyleSheet.create({
         flex: 1,
         paddingTop: 20,
         paddingHorizontal: 20,
+    },
+    backButton: {
+        marginBottom: 16,
+    },
+    backButtonText: {
+        color: '#4f3f97',
+        fontSize: 14,
+        fontWeight: '600',
+        textDecorationLine: 'underline',
     },
     infoRow: {
         flexDirection: 'row',

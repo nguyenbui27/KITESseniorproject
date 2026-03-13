@@ -107,11 +107,31 @@ class AuthService {
             return await RequestService
                 .post(Endpoint.Auth.Signup, { ...data })
                 .then(response => {
-                    Alert.alert('Registration successful');
+                    if (response?.requiresVerification) {
+                        Alert.alert('Verification required', response?.message || 'Please verify your email to complete registration.');
+                    } else {
+                        Alert.alert('Registration successful');
+                    }
                     return response;
                 });
         } catch (error: any) {
             Alert.alert('Registration failed', this.getErrorMessage(error, 'Unable to register. Please check your information.'));
+        } finally {
+            setLoading(false);
+        }
+    }
+
+    async verifySignup(email: string, otp: string, setLoading: Function) {
+        setLoading(true);
+        try {
+            return await RequestService
+                .post(Endpoint.Auth.SignupVerify, { email, otp })
+                .then(response => {
+                    Alert.alert('Registration successful', 'Your account has been verified. Please log in.');
+                    return response;
+                });
+        } catch (error: any) {
+            Alert.alert('Verification failed', this.getErrorMessage(error, 'Invalid or expired verification code.'));
         } finally {
             setLoading(false);
         }

@@ -50,6 +50,23 @@ function isValidPhoneNumber(phoneNumber) {
   return /^\+?\d{10,15}$/.test(String(phoneNumber || '').trim());
 }
 
+function isLikelyFakePhoneNumber(phoneNumber) {
+  const digits = String(phoneNumber || '').replace(/\D/g, '');
+  if (!digits) {
+    return true;
+  }
+  if (/^(\d)\1+$/.test(digits)) {
+    return true;
+  }
+  const obviousSequences = new Set([
+    '0123456789',
+    '1234567890',
+    '0987654321',
+    '9876543210',
+  ]);
+  return obviousSequences.has(digits);
+}
+
 async function hasValidEmailDomain(email) {
   try {
     const domain = String(email).split('@')[1] || '';
@@ -210,6 +227,12 @@ const server = http.createServer(async (req, res) => {
         });
         return;
       }
+      if (isLikelyFakePhoneNumber(phoneNumber)) {
+        sendJson(res, 400, {
+          message: 'Phone number appears invalid. Please enter a real phone number.',
+        });
+        return;
+      }
       if (!isValidEmailFormat(email)) {
         sendJson(res, 400, { message: 'Invalid email format.' });
         return;
@@ -234,21 +257,111 @@ const server = http.createServer(async (req, res) => {
         sendJson(res, 409, { message: 'Account already exists.' });
         return;
       }
+      const hasPendingForEmail = db.signupVerifications.some(
+        item => item.email === email && item.expiresAt >= Date.now(),
+      );
+      if (hasPendingForEmail) {
+        sendJson(res, 429, { message: 'A verification code was already sent. Please check your email.' });
+        return;
+      }
 
-      const now = new Date().toISOString();
-      const user = {
+      const otp = createOtp();
+      const expiresAt = Date.now() + OTP_TTL_MS;
+      db.signupVerifications = db.signupVerifications.filter(item => item.email !== email);
+      db.signupVerifications.push({
         id: crypto.randomUUID(),
         email,
         name,
         phoneNumber,
+        passwordHash: hashPassword(password),
+        otpHash: hashOtp(otp),
+        expiresAt,
+        createdAt: new Date().toISOString(),
+      });
+      await writeDb(db);
+
+      if (emailEnabled()) {
+        try {
+          await sendEmail({
+            to: [email],
+            subject: 'Your KITES registration code',
+            html: buildOtpEmailHtml({
+              title: 'Parent Registration Verification',
+              code: otp,
+              minutes: Math.round(OTP_TTL_MS / 60000),
+            }),
+          });
+        } catch (error) {
+          const detail = error instanceof Error ? error.message : String(error);
+          sendJson(res, 500, {
+            message: `Unable to send verification email: ${detail}`,
+            error: detail,
+          });
+          return;
+        }
+      } else if (!DEV_RETURN_OTP) {
+        sendJson(res, 500, {
+          message: 'Email provider is not configured. Configure EMAIL_PROVIDER, RESEND_API_KEY, and EMAIL_FROM.',
+        });
+        return;
+      }
+
+      sendJson(res, 200, {
+        message: 'Verification code sent to your email. Complete verification to finish registration.',
+        requiresVerification: true,
+        email,
+        ...(DEV_RETURN_OTP ? { otp } : {}),
+      });
+      return;
+    }
+
+    if (method === 'POST' && path === '/api/auth/signup/verify') {
+      const body = await parseJsonBody(req);
+      const email = normalizeEmail(body.email);
+      const otp = String(body.otp || '').trim();
+
+      if (!email || !otp) {
+        sendJson(res, 400, { message: 'email and otp are required' });
+        return;
+      }
+
+      const db = await readDb();
+      const nowMs = Date.now();
+      db.signupVerifications = db.signupVerifications.filter(item => item.expiresAt >= nowMs);
+      const index = db.signupVerifications.findIndex(
+        item => item.email === email && item.otpHash === hashOtp(otp),
+      );
+
+      if (index < 0) {
+        await writeDb(db);
+        sendJson(res, 401, { message: 'Invalid or expired verification code.' });
+        return;
+      }
+
+      const pending = db.signupVerifications[index];
+      const userExists = db.users.some(user => user.email === email);
+      if (userExists) {
+        db.signupVerifications.splice(index, 1);
+        await writeDb(db);
+        sendJson(res, 409, { message: 'Account already exists.' });
+        return;
+      }
+
+      const now = new Date().toISOString();
+      const user = {
+        id: crypto.randomUUID(),
+        email: pending.email,
+        name: pending.name,
+        phoneNumber: pending.phoneNumber,
         role: 'parent',
         points: 0,
-        passwordHash: hashPassword(password),
+        passwordHash: pending.passwordHash,
         createdAt: now,
         updatedAt: now,
       };
 
       db.users.push(user);
+      db.signupVerifications.splice(index, 1);
       await writeDb(db);
 
       sendJson(res, 201, {
@@ -326,9 +439,10 @@ const server = http.createServer(async (req, res) => {
             }),
           });
         } catch (error) {
+          const detail = error instanceof Error ? error.message : String(error);
           sendJson(res, 500, {
-            message: 'Unable to send access code email. Check email provider configuration.',
-            error: error instanceof Error ? error.message : String(error),
+            message: `Unable to send access code email: ${detail}`,
+            error: detail,
           });
           return;
         }

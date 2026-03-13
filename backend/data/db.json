@@ -83,13 +83,13 @@
     {
       "id": "df54ab9b-6479-488f-b3c4-f41ba48b0332",
       "email": "btn@gmail.com",
-      "name": "btn",
+      "name": "Nguyen Bui",
       "phoneNumber": "7651234567",
       "role": "parent",
       "points": 0,
       "passwordHash": "120000:aaff4acf9e249eb9ffd1c03d53eee984:dafd986bc3dfd8153a51a126782716675ad4d6e564f31f51e97ed6294e70607604f56cb487edf6b3390e7b858668401948d0aed35f7e3538fafc040e70a77c05",
       "createdAt": "2026-03-13T18:50:52.207Z",
-      "updatedAt": "2026-03-13T18:50:52.207Z"
+      "updatedAt": "2026-03-13T23:48:02.347Z"
     },
     {
       "id": "deed527d-5d90-405b-a210-4e06d76b26ef",
@@ -101,6 +101,17 @@
       "passwordHash": "120000:5c817b76c4d149b2291aeb2b081df5e7:d4eb46aa319861107970b86573f54e02fe75ded5dd3710427c6ffa9027d10cd6ad258bac649741585c9d8ada55dae0a7163762fd9a29791ed7f3d2c5a9493d3d",
       "createdAt": "2026-03-13T18:54:21.519Z",
       "updatedAt": "2026-03-13T18:54:21.519Z"
+    },
+    {
+      "id": "6aead475-a4b8-418d-b334-a9f27eceb77b",
+      "email": "hello@gmail.com",
+      "name": "nguyen",
+      "phoneNumber": "1234567890",
+      "role": "parent",
+      "points": 0,
+      "passwordHash": "120000:c2cd3bf2f2e79e3fefd403ab13e607ba:e7750834bc3efc99f3566afe99f9723a833a93892fbc09e31078b91dd3573f85613ba3c7b0c8be53a55cd375e4d054cc2c9bec32cdc473cb2fa56753c3b532c8",
+      "createdAt": "2026-03-13T22:53:58.246Z",
+      "updatedAt": "2026-03-13T22:53:58.246Z"
     }
   ],
   "passwordResetTokens": [
@@ -119,9 +130,15 @@
   "childAccessCodes": [
     {
       "userId": "1f9d6f0e-7143-4bd5-922a-3c328ce83058",
-      "otpHash": "ec6a2623a8c290011a194b465805d48f403aff7487931c0335078a08fe0c124d",
-      "expiresAt": 1772613344449,
-      "createdAt": "2026-03-04T08:25:44.449Z"
+      "otpHash": "33e4b1f93153be99ae4d41d45db9d97f8b63c623ac6ab9ad2dbcab7ece89839f",
+      "expiresAt": 1773444111609,
+      "createdAt": "2026-03-13T23:11:51.617Z"
+    },
+    {
+      "userId": "aaa4c213-4b82-4f97-bcd2-b5f1a5c39541",
+      "otpHash": "6e6c3f02ade9730ac395bebac52cdda7aa862a8cae24d3be1db0232a9d5e08ab",
+      "expiresAt": 1773444239015,
+      "createdAt": "2026-03-13T23:13:59.018Z"
     }
   ],
   "revokedTokens": [
@@ -141,10 +158,13 @@
     "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxZjlkNmYwZS03MTQzLTRiZDUtOTIyYS0zYzMyOGNlODMwNTgiLCJlbWFpbCI6Im5ndXllbmJ1aV8yMDI2QGRlcGF1dy5lZHUiLCJpc3MiOiJraXRlcy1sb2NhbC1iYWNrZW5kIiwiYXVkIjoia2l0ZXMtbW9iaWxlLWFwcCIsImp0aSI6ImRlMDA4NDU2LTIzMTEtNDZiMS04MDQ0LWZiYjIyYmYxZjNlYyIsImlhdCI6MTc3MjYzNjcwMCwiZXhwIjoxNzczMjQxNTAwfQ.Y7K1KoFrWsRrD9NBPF45iAIshYGaEeNJy2-O2vDSdOw",
     "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxZjlkNmYwZS03MTQzLTRiZDUtOTIyYS0zYzMyOGNlODMwNTgiLCJlbWFpbCI6Im5ndXllbmJ1aV8yMDI2QGRlcGF1dy5lZHUiLCJpc3MiOiJraXRlcy1sb2NhbC1iYWNrZW5kIiwiYXVkIjoia2l0ZXMtbW9iaWxlLWFwcCIsImp0aSI6ImQ3NjQ4MDMzLTczNmYtNDRlOS04YThiLTYwNDBmN2UyZmJlOSIsImlhdCI6MTc3MjYzNjczNSwiZXhwIjoxNzczMjQxNTM1fQ.aCSSJyl01oGIG742kHseMmLk_8wfRkg8hxMdov9x-lc",
     "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxZjlkNmYwZS03MTQzLTRiZDUtOTIyYS0zYzMyOGNlODMwNTgiLCJlbWFpbCI6Im5ndXllbmJ1aV8yMDI2QGRlcGF1dy5lZHUiLCJpc3MiOiJraXRlcy1sb2NhbC1iYWNrZW5kIiwiYXVkIjoia2l0ZXMtbW9iaWxlLWFwcCIsImp0aSI6IjE4YTIyNjhkLTk4MjUtNDFhYS1iN2ExLWNlOTE5YTg4Y2QyMCIsImlhdCI6MTc3MjY0MzI0NiwiZXhwIjoxNzczMjQ4MDQ2fQ.vokgRVsCGm6KT6KMxehKIOWxdpP4XR39RGKkaLqFyCY",
-    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxZjlkNmYwZS03MTQzLTRiZDUtOTIyYS0zYzMyOGNlODMwNTgiLCJlbWFpbCI6Im5ndXllbmJ1aV8yMDI2QGRlcGF1dy5lZHUiLCJpc3MiOiJraXRlcy1sb2NhbC1iYWNrZW5kIiwiYXVkIjoia2l0ZXMtbW9iaWxlLWFwcCIsImp0aSI6ImU1YWM5ODM5LTAwYWUtNDEyZi05MmM5LTU5Y2E2MjJlNDQwZSIsImlhdCI6MTc3MjY0MzI4NywiZXhwIjoxNzczMjQ4MDg3fQ.kmpeyk60dEmxVwrPirNUD6uSSqM2sgrZH7stMNAcZjI"
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxZjlkNmYwZS03MTQzLTRiZDUtOTIyYS0zYzMyOGNlODMwNTgiLCJlbWFpbCI6Im5ndXllbmJ1aV8yMDI2QGRlcGF1dy5lZHUiLCJpc3MiOiJraXRlcy1sb2NhbC1iYWNrZW5kIiwiYXVkIjoia2l0ZXMtbW9iaWxlLWFwcCIsImp0aSI6ImU1YWM5ODM5LTAwYWUtNDEyZi05MmM5LTU5Y2E2MjJlNDQwZSIsImlhdCI6MTc3MjY0MzI4NywiZXhwIjoxNzczMjQ4MDg3fQ.kmpeyk60dEmxVwrPirNUD6uSSqM2sgrZH7stMNAcZjI",
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJkZjU0YWI5Yi02NDc5LTQ4OGYtYjNjNC1mNDFiYTQ4YjAzMzIiLCJlbWFpbCI6ImJ0bkBnbWFpbC5jb20iLCJpc3MiOiJraXRlcy1sb2NhbC1iYWNrZW5kIiwiYXVkIjoia2l0ZXMtbW9iaWxlLWFwcCIsImp0aSI6ImNhN2M3ODQwLWQxZDgtNGIwMS1hNWEyLWJkMDNmOWM2NjgyOSIsImlhdCI6MTc3MzQ0MTk4OCwiZXhwIjoxNzc0MDQ2Nzg4fQ._zagwNQ3L7_6GFopwhqkz6QvCdSaWgzKGbyXeYNNGug",
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJkZjU0YWI5Yi02NDc5LTQ4OGYtYjNjNC1mNDFiYTQ4YjAzMzIiLCJlbWFpbCI6ImJ0bkBnbWFpbC5jb20iLCJpc3MiOiJraXRlcy1sb2NhbC1iYWNrZW5kIiwiYXVkIjoia2l0ZXMtbW9iaWxlLWFwcCIsImp0aSI6ImQzY2Q3YjQ2LWJkNGUtNGExZC05ZjllLTE3YTQ3YWEyYmYyZiIsImlhdCI6MTc3MzQ0NTY3MSwiZXhwIjoxNzc0MDUwNDcxfQ.QOHUxVsAi0bCT9qfiz8kyLosK7n-JhWWp-YUE3YYpW0"
   ],
   "deviceTokens": [],
   "guardians": [],
   "conversations": [],
-  "chatLogs": []
+  "chatLogs": [],
+  "signupVerifications": []
 }

@@ -4,6 +4,7 @@ export class Endpoint {
         static OTP = "/auth/child/login"
         static ChildAccessCode = "/auth/child/request-access-code"
         static Signup = "/auth/signup"
+        static SignupVerify = "/auth/signup/verify"
         static Profile = "/users/profile"
         static UpdateProfile = "/users/update-profile"
         static ResetPassword = "/auth/reset-password"

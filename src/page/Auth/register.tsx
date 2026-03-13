@@ -15,7 +15,13 @@ const RegisterScreen = () => {
     const [loading, setLoading] = useState<boolean>(false);
     const navigation = useNavigation<any>();
 
-    const onGoBack = () => navigation.goBack();
+    const onGoBack = () => {
+        if (navigation.canGoBack()) {
+            navigation.goBack();
+            return;
+        }
+        navigation.navigate('LoginScreen');
+    };
 
     const dataProfile = _data;
     const setDataProfile = (data: any) => {
@@ -46,6 +52,10 @@ const RegisterScreen = () => {
                     },
                     setLoading,
                 ).then((response) => {
+                    if (response?.requiresVerification) {
+                        navigation.navigate('RegisterVerifyScreen', { email: response.email || dataProfile.email });
+                        return;
+                    }
                     if (response) navigation.navigate('LoginScreen');
                 });
             } catch (error) {
