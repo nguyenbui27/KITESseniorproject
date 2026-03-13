@@ -86,6 +86,21 @@ You've successfully run and modified your React Native App. :partying_face:
 
 If you're having issues getting the above steps to work, see the [Troubleshooting](https://reactnative.dev/docs/troubleshooting) page.
 
+### Android "Unable to load script" (red screen)
+
+Run these commands in order:
+
+```sh
+# Terminal 1 (start Metro)
+npm run start:reset
+
+# Terminal 2 (map device port to Metro, then install app)
+npm run android:reverse
+npm run android
+```
+
+If you're on a physical Android phone connected by USB, keep `adb reverse` running before opening the app.
+
 # Learn More
 
 To learn more about React Native, take a look at the following resources:
@@ -95,3 +110,72 @@ To learn more about React Native, take a look at the following resources:
 - [Learn the Basics](https://reactnative.dev/docs/getting-started) - a **guided tour** of the React Native **basics**.
 - [Blog](https://reactnative.dev/blog) - read the latest official React Native **Blog** posts.
 - [`@facebook/react-native`](https://github.com/facebook/react-native) - the Open Source; GitHub **repository** for React Native.
+
+## Local Backend (Auth Working)
+
+This repo now includes a simple local backend for auth in `backend/src/server.js`.
+
+### Start backend
+
+```sh
+npm run backend:start
+```
+
+or
+
+```sh
+npm run dev:backend
+```
+
+Backend base URL:
+
+- iOS simulator: `http://127.0.0.1:5004/api`
+- Android emulator: `http://10.0.2.2:5004/api`
+
+The frontend `.env` is configured to:
+
+```sh
+API_URL=http://127.0.0.1:5004/api
+```
+
+### Implemented endpoints
+
+- `POST /api/auth/signup`
+- `POST /api/auth/login`
+- `POST /api/auth/child/request-access-code` (emails 6-digit code)
+- `POST /api/auth/child/login/:otp`
+- `POST /api/auth/forgot-password`
+- `POST /api/auth/reset-password?otp=...&newPassword=...`
+- `POST /api/auth/logout`
+- `GET /api/users/profile`
+- `PUT /api/users/change-password`
+- `PUT /api/users/update-profile`
+- `POST /api/device-tokens/register`
+- `POST /api/device-tokens/register-email`
+- `POST /api/device-tokens/unregister`
+
+### Data storage
+
+Local persistent data is stored in:
+
+- `backend/data/db.json`
+
+For real production deployment, replace this with a real database and proper email/SMS OTP delivery.
+
+### Email OTP provider config (Resend)
+
+Set these before starting backend:
+
+```sh
+export EMAIL_PROVIDER=resend
+export RESEND_API_KEY=re_xxx
+export EMAIL_FROM="KITES <noreply@your-domain.com>"
+```
+
+Optional local development flag:
+
+```sh
+export DEV_RETURN_OTP=true
+```
+
+When `DEV_RETURN_OTP=true`, OTP is also returned in API response for testing.
