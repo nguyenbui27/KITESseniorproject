@@ -7,6 +7,9 @@ import authService from '../../infrastructure/repositories/auth/auth.service';
 import { convertTimeOnly } from '../../infrastructure/helper/helper';
 import { useIsFocused } from '@react-navigation/native';
 
+const AI_ASSISTANT_ID = 'ai-assistant';
+const AI_ASSISTANT_NAME = 'AI Assistant';
+
 const ChatListScreen = ({ navigation }: any) => {
     const [, setLoading] = useState<boolean>(false);
     const [tab, setTab] = useState<number>(1);
@@ -83,9 +86,9 @@ const ChatListScreen = ({ navigation }: any) => {
             style={styles.chatItem}
             onPress={() => {
                 navigation.navigate('ChatSlugScreen', {
-                    chatId: item.id,
-                    receiverId: item.wantToSendUser.id,
-                    name: item.wantToSendUser.name,
+                    chatId: item.chatId,
+                    receiverId: item.wantToSendUser?.id,
+                    name: item.wantToSendUser?.name,
                 });
             }}
         >
@@ -107,7 +110,6 @@ const ChatListScreen = ({ navigation }: any) => {
             style={styles.chatItem}
             onPress={() => {
                 navigation.navigate('ChatSlugScreen', {
-                    childrenId: item.id,
                     receiverId: item.id,
                     name: item.name,
                 });
@@ -136,14 +138,43 @@ const ChatListScreen = ({ navigation }: any) => {
 
                 {tab === 1 ? (
                     <FlatList
-                        data={myConversation}
+                        data={(() => {
+                            const assistantConversation = myConversation.find(
+                                (conversation: any) => conversation.wantToSendUser?.id === AI_ASSISTANT_ID,
+                            );
+
+                            return [
+                                {
+                                    id: `assistant-${AI_ASSISTANT_ID}`,
+                                    chatId: assistantConversation?.id,
+                                    wantToSendUser: {
+                                        id: AI_ASSISTANT_ID,
+                                        name: AI_ASSISTANT_NAME,
+                                    },
+                                    lastMessage: assistantConversation?.lastMessage || 'Ask me anything',
+                                    lastMessageTime: assistantConversation?.lastMessageTime || '',
+                                },
+                                ...myConversation
+                                    .filter((conversation: any) => conversation.wantToSendUser?.id !== AI_ASSISTANT_ID)
+                                    .map((conversation: any) => ({
+                                        ...conversation,
+                                        chatId: conversation.id,
+                                    })),
+                            ];
+                        })()}
                         renderItem={renderItem}
                         keyExtractor={(item) => item.id}
                         contentContainerStyle={styles.listContainer}
                     />
                 ) : (
                     <FlatList
-                        data={myChildrenNew}
+                        data={[
+                            {
+                                id: AI_ASSISTANT_ID,
+                                name: AI_ASSISTANT_NAME,
+                            },
+                            ...myChildrenNew,
+                        ]}
                         renderItem={renderItemUser}
                         keyExtractor={(item) => item.id}
                         contentContainerStyle={styles.listContainer}

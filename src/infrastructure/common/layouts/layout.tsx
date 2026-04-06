@@ -77,7 +77,13 @@ const MainLayout = ({ onGoBack, isBackButton = false, title, ...props }: any) =>
                     <Text style={styles.class}>{title}</Text>
                 </View>
                 {dataProfile?.role === 'child' && (
-                    <TouchableOpacity onPress={() => console.log('SOS pressed')} style={styles.round}>
+                    <TouchableOpacity
+                        onPress={() => { }}
+                        onLongPress={() => console.log('SOS pressed')}
+                        delayLongPress={800}
+                        activeOpacity={0.9}
+                        style={styles.sosButton}
+                    >
                         <Text style={styles.textSOS}>SOS</Text>
                     </TouchableOpacity>
                 )}
@@ -130,9 +136,22 @@ const styles = StyleSheet.create({
         fontSize: 14,
         fontWeight: '700',
     },
-    round: {
-        width: 36, height: 36, borderRadius: 22, backgroundColor: '#eee',
-        display: 'flex', justifyContent: 'center', alignItems: 'center',
+    sosButton: {
+        width: 52,
+        height: 52,
+        borderRadius: 26,
+        backgroundColor: '#d62828',
+        borderWidth: 2,
+        borderColor: '#9d0208',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginRight: 2,
+        marginTop: 2,
     },
-    textSOS: { color: 'red', fontWeight: 'bold' },
+    textSOS: {
+        color: '#ffd60a',
+        fontWeight: '900',
+        fontSize: 14,
+        letterSpacing: 0.4,
+    },
 });

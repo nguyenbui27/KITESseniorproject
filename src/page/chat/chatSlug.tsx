@@ -37,11 +37,19 @@ const ChatSlugScreen = () => {
                 if (response) {
                     setChatLog(response);
                 }
+                return;
+            }
+
+            if (receiverId) {
+                const response = await conversationService.getConversationByReceiverId(String(receiverId), setLoading);
+                if (response) {
+                    setChatLog(response);
+                }
             }
         } catch (error) {
             console.error(error);
         }
-    }, [chatId, childrenId, setLoading]);
+    }, [chatId, childrenId, receiverId, setLoading]);
 
     useEffect(() => {
         getMyChatLogAsync();
@@ -59,21 +67,41 @@ const ChatSlugScreen = () => {
     };
 
     const handleSend = async () => {
-        if (!inputText.trim()) return;
+        const trimmedMessage = inputText.trim();
+        if (!trimmedMessage) return;
+
+        const optimisticId = `local-${Date.now()}`;
+        const optimisticMessage = {
+            id: optimisticId,
+            message: trimmedMessage,
+            type: 'TEXT',
+            aiChat: false,
+            sender: { id: 'local-user' },
+            receiverId,
+            createdAt: new Date().toISOString(),
+        };
+
+        setChatLog((prev) => [...prev, optimisticMessage]);
+        setInputText('');
+        setTimeout(() => {
+            flatListRef.current?.scrollToEnd({ animated: true });
+        }, 50);
+
         try {
             await conversationService.sendMessage(
                 {
                     receiverId,
-                    message: inputText.trim(),
+                    message: trimmedMessage,
                 },
                 setLoading,
             );
-            setInputText('');
             await getMyChatLogAsync();
             setTimeout(() => {
                 flatListRef.current?.scrollToEnd({ animated: true });
             }, 100);
         } catch (error) {
+            setChatLog((prev) => prev.filter((item) => item.id !== optimisticId));
+            setInputText(trimmedMessage);
             console.error(error);
         }
     };
