@@ -74,3 +74,9 @@ backend/.env
 !.yarn/releases
 !.yarn/sdks
 !.yarn/versions
+
+# local build/tool caches
+.gradle-home/
+
+# editor swap files
+*.swp
