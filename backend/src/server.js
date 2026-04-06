@@ -176,6 +176,18 @@ function mapChatLog(entry, currentUserId) {
   };
 }
 
+function getLatestLocationByChildId(db, childId) {
+  if (!Array.isArray(db.locations)) {
+    return null;
+  }
+  return db.locations.find(item => item.childId === childId) || null;
+}
+
+function parseCoordinate(value) {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
 function buildOtpEmailHtml({ title, code, minutes }) {
   return `
     <div style="font-family:Arial,Helvetica,sans-serif;line-height:1.5;color:#111">
@@ -755,8 +767,144 @@ const server = http.createServer(async (req, res) => {
       const parentId = auth.user.role === 'child' ? auth.user.parentId : auth.user.id;
       const children = auth.db.users
         .filter(item => item.role === 'child' && item.parentId === parentId)
-        .map(item => sanitizeUser(item));
+        .map(item => ({
+          ...sanitizeUser(item),
+          latestLocation: getLatestLocationByChildId(auth.db, item.id),
+        }));
       sendJson(res, 200, children);
+      return;
+    }
+
+    if (method === 'POST' && path === '/api/locations/add') {
+      const auth = await requireAuth(req);
+      if (auth.error) {
+        sendJson(res, auth.status, { message: auth.error });
+        return;
+      }
+
+      const body = await parseJsonBody(req);
+      const latitude = parseCoordinate(body.latitude);
+      const longitude = parseCoordinate(body.longitude);
+      const accuracy = parseCoordinate(body.accuracy);
+      const capturedAt = typeof body.capturedAt === 'string' && body.capturedAt.trim()
+        ? body.capturedAt
+        : new Date().toISOString();
+
+      if (latitude === null || longitude === null) {
+        sendJson(res, 400, { message: 'latitude and longitude are required numbers' });
+        return;
+      }
+      if (latitude < -90 || latitude > 90 || longitude < -180 || longitude > 180) {
+        sendJson(res, 400, { message: 'Invalid coordinate range' });
+        return;
+      }
+
+      let child = null;
+      if (auth.user.role === 'child') {
+        child = auth.user;
+      } else {
+        const childId = String(body.childId || '').trim();
+        if (!childId) {
+          sendJson(res, 400, { message: 'childId is required for parent updates' });
+          return;
+        }
+        child = auth.db.users.find(item => item.id === childId && item.role === 'child' && item.parentId === auth.user.id);
+      }
+
+      if (!child) {
+        sendJson(res, 404, { message: 'Child not found' });
+        return;
+      }
+
+      if (!Array.isArray(auth.db.locations)) {
+        auth.db.locations = [];
+      }
+
+      const now = new Date().toISOString();
+      const payload = {
+        childId: child.id,
+        parentId: child.parentId || auth.user.id,
+        latitude,
+        longitude,
+        accuracy: accuracy === null ? null : accuracy,
+        capturedAt,
+        updatedAt: now,
+      };
+
+      const existingIndex = auth.db.locations.findIndex(item => item.childId === child.id);
+      if (existingIndex >= 0) {
+        auth.db.locations[existingIndex] = payload;
+      } else {
+        auth.db.locations.push(payload);
+      }
+
+      await writeDb(auth.db);
+      sendJson(res, 201, payload);
+      return;
+    }
+
+    if (method === 'GET' && path === '/api/locations/family') {
+      const auth = await requireAuth(req);
+      if (auth.error) {
+        sendJson(res, auth.status, { message: auth.error });
+        return;
+      }
+
+      const parentId = auth.user.role === 'child' ? auth.user.parentId : auth.user.id;
+      const children = auth.db.users.filter(item => item.role === 'child' && item.parentId === parentId);
+      const familyLocations = children
+        .map(child => {
+          const location = getLatestLocationByChildId(auth.db, child.id);
+          if (!location) {
+            return null;
+          }
+          return {
+            child: sanitizeUser(child),
+            location,
+          };
+        })
+        .filter(Boolean);
+
+      sendJson(res, 200, familyLocations);
+      return;
+    }
+
+    if (method === 'POST' && path === '/api/battery/create') {
+      const auth = await requireAuth(req);
+      if (auth.error) {
+        sendJson(res, auth.status, { message: auth.error });
+        return;
+      }
+
+      const body = await parseJsonBody(req);
+      const parsedLevel = Number(body.batteryLevel);
+      if (!Number.isFinite(parsedLevel)) {
+        sendJson(res, 400, { message: 'batteryLevel is required' });
+        return;
+      }
+
+      const batteryLevel = Math.max(0, Math.min(100, Math.round(parsedLevel)));
+      let child = null;
+      if (auth.user.role === 'child') {
+        child = auth.user;
+      } else {
+        const childId = String(body.childId || '').trim();
+        if (!childId) {
+          sendJson(res, 400, { message: 'childId is required for parent updates' });
+          return;
+        }
+        child = auth.db.users.find(item => item.id === childId && item.role === 'child' && item.parentId === auth.user.id);
+      }
+
+      if (!child) {
+        sendJson(res, 404, { message: 'Child not found' });
+        return;
+      }
+
+      child.batteryLevel = batteryLevel;
+      child.updatedAt = new Date().toISOString();
+      await writeDb(auth.db);
+      sendJson(res, 201, sanitizeUser(child));
       return;
     }
 

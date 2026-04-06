@@ -85,7 +85,10 @@ android {
         versionCode 1
         versionName "1.0"
         // Allow cleartext HTTP in development so API_URL=http://... works on Android.
-        manifestPlaceholders = [usesCleartextTraffic: "true"]
+        manifestPlaceholders = [
+            usesCleartextTraffic: "true",
+            googleMapsApiKey: (project.findProperty("GOOGLE_MAPS_API_KEY") ?: "")
+        ]
     }
     signingConfigs {
         debug {

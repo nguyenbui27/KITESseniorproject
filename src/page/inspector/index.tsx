@@ -142,7 +142,7 @@ const InspectorScreen = () => {
                 closeForm();
             }
         } catch (error) {
-            Alert.alert('Error', editingId ? 'Failed to update guardian' : 'Failed to create guardian');
+            Alert.alert('Error', (error as Error)?.message || (editingId ? 'Failed to update guardian' : 'Failed to create guardian'));
             console.error('Guardian operation error:', error);
         }
     };
@@ -159,7 +159,7 @@ const InspectorScreen = () => {
                             await fetchInspectors();
                         }
                     } catch (error) {
-                        Alert.alert('Error', 'Failed to delete guardian');
+                        Alert.alert('Error', (error as Error)?.message || 'Failed to delete guardian');
                         console.error('Delete guardian error:', error);
                     }
                 },

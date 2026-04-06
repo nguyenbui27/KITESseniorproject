@@ -1,6 +1,7 @@
 import ChatListScreen from "../../page/chat";
 import ChildrenScreen from "../../page/children";
 import InspectorScreen from "../../page/inspector";
+import MapScreen from "../../page/map";
 import ProfileScreen from "../../page/profile";
 
 export const bottomNavigator = [
@@ -14,6 +15,12 @@ export const bottomNavigator = [
         component: ChildrenScreen,
         name: "Children",
         icon: 'human-child',
+        role: ['admin', 'parent']
+    },
+    {
+        component: MapScreen,
+        name: "Map",
+        icon: 'map-marker-radius-outline',
         role: ['admin', 'parent']
     },
     {

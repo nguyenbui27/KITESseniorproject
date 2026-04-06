@@ -15,6 +15,7 @@ import ButtonCommon from '../../infrastructure/common/components/button/button-c
 import userService from '../../infrastructure/repositories/user/user.service';
 import LoadingFullScreen from '../../infrastructure/common/components/controls/loading';
 import { useIsFocused } from '@react-navigation/native';
+import authService from '../../infrastructure/repositories/auth/auth.service';
 
 type Child = {
     id: string;
@@ -32,6 +33,7 @@ const ChildrenScreen = () => {
     const [loading, setLoading] = useState<boolean>(false);
     const [childrenList, setChildrenList] = useState<Child[]>([]);
     const [showForm, setShowForm] = useState(false);
+    const [role, setRole] = useState<string>('parent');
     const isFocused = useIsFocused();
 
     const dataRequest = _data;
@@ -68,18 +70,48 @@ const ChildrenScreen = () => {
     }, []);
 
     useEffect(() => {
+        const fetchRole = async () => {
+            try {
+                const profile = await authService.profile(() => { });
+                if (profile?.role) {
+                    setRole(profile.role);
+                }
+            } catch (error) {
+                console.error(error);
+            }
+        };
+        fetchRole().then(() => { });
+    }, []);
+
+    useEffect(() => {
         if (isFocused) {
             fetchChildren();
         }
     }, [isFocused]);
 
+    useEffect(() => {
+        if (!isFocused || role !== 'parent') return;
+        const timer = setInterval(() => {
+            fetchChildren();
+        }, 15000);
+        return () => clearInterval(timer);
+    }, [isFocused, role]);
+
     const openCreate = () => {
+        if (role !== 'parent') {
+            Alert.alert('Permission denied', 'Only parent can add children.');
+            return;
+        }
         setEditingId(null);
         setDataRequest({ name: '', phoneNumber: '' });
         setShowForm(true);
     };
 
     const openEdit = (child: Child) => {
+        if (role !== 'parent') {
+            Alert.alert('Permission denied', 'Only parent can edit children.');
+            return;
+        }
         setEditingId(child.id);
         setDataRequest({
             name: child.name,
@@ -95,6 +127,10 @@ const ChildrenScreen = () => {
     };
 
     const handleAddOrUpdateChild = async () => {
+        if (role !== 'parent') {
+            Alert.alert('Permission denied', 'Only parent can add or update children.');
+            return;
+        }
         setSubmittedTime(Date.now());
         if (!isValidData()) return;
 
@@ -113,12 +149,16 @@ const ChildrenScreen = () => {
                 closeForm();
             }
         } catch (error) {
-            Alert.alert('Error', editingId ? 'Failed to update child' : 'Failed to create child');
+            Alert.alert('Error', (error as Error)?.message || (editingId ? 'Failed to update child' : 'Failed to create child'));
             console.error('Child operation error:', error);
         }
     };
 
     const handleDeleteChild = (id: string) => {
+        if (role !== 'parent') {
+            Alert.alert('Permission denied', 'Only parent can delete children.');
+            return;
+        }
         Alert.alert('Confirm', 'Are you sure you want to delete this child?', [
             { text: 'Cancel', style: 'cancel' },
             {
@@ -130,7 +170,7 @@ const ChildrenScreen = () => {
                             await fetchChildren();
                         }
                     } catch (error) {
-                        Alert.alert('Error', 'Failed to delete child');
+                        Alert.alert('Error', (error as Error)?.message || 'Failed to delete child');
                         console.error('Delete child error:', error);
                     }
                 },
@@ -143,18 +183,26 @@ const ChildrenScreen = () => {
             <View style={styles.childInfo}>
                 <Text style={styles.name}>{item.name}</Text>
                 <Text style={styles.details}>
-                    Access code: {item.accessCode || '--'} | Phone: {item.phoneNumber || '--'}
+                    Access code: {item.accessCode || '--'}
                 </Text>
                 <Text style={styles.details}>Battery: {item.batteryLevel ?? 0}%</Text>
+                {role === 'parent' && (item.batteryLevel ?? 0) <= 20 && (
+                    <View style={styles.lowBatteryBadge}>
+                        <Icon name="battery-alert" size={16} color="#b42318" />
+                        <Text style={styles.lowBatteryText}>Low battery warning (20% or below)</Text>
+                    </View>
+                )}
             </View>
-            <View style={styles.actions}>
-                <TouchableOpacity onPress={() => openEdit(item)} style={styles.actionButton}>
-                    <Icon name="pencil" size={20} color="#4f3f97" />
-                </TouchableOpacity>
-                <TouchableOpacity onPress={() => handleDeleteChild(item.id)} style={styles.actionButton}>
-                    <Icon name="delete" size={20} color="#ff4d4f" />
-                </TouchableOpacity>
-            </View>
+            {role === 'parent' && (
+                <View style={styles.actions}>
+                    <TouchableOpacity onPress={() => openEdit(item)} style={styles.actionButton}>
+                        <Icon name="pencil" size={20} color="#4f3f97" />
+                    </TouchableOpacity>
+                    <TouchableOpacity onPress={() => handleDeleteChild(item.id)} style={styles.actionButton}>
+                        <Icon name="delete" size={20} color="#ff4d4f" />
+                    </TouchableOpacity>
+                </View>
+            )}
         </View>
     );
 
@@ -163,9 +211,11 @@ const ChildrenScreen = () => {
             <View style={styles.container}>
                 <View style={styles.header}>
                     <Text style={styles.headerText}>Children list</Text>
-                    <TouchableOpacity onPress={openCreate}>
-                        <Icon name="plus-circle" size={24} color="#4f3f97" />
-                    </TouchableOpacity>
+                    {role === 'parent' && (
+                        <TouchableOpacity onPress={openCreate}>
+                            <Icon name="plus-circle" size={24} color="#4f3f97" />
+                        </TouchableOpacity>
+                    )}
                 </View>
 
                 <FlatList
@@ -241,10 +291,13 @@ const styles = StyleSheet.create({
     childItem: {
         flexDirection: 'row',
         justifyContent: 'space-between',
-        alignItems: 'center',
-        paddingVertical: 14,
-        borderBottomWidth: 1,
-        borderColor: '#eee',
+        alignItems: 'flex-start',
+        padding: 14,
+        borderWidth: 1,
+        borderColor: '#ececec',
+        borderRadius: 12,
+        marginBottom: 10,
+        backgroundColor: '#fafafa',
     },
     childInfo: {
         flex: 1,
@@ -265,6 +318,24 @@ const styles = StyleSheet.create({
     },
     actionButton: {
         padding: 4,
+    },
+    lowBatteryBadge: {
+        marginTop: 8,
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 6,
+        backgroundColor: '#fee4e2',
+        borderWidth: 1,
+        borderColor: '#fecdca',
+        borderRadius: 8,
+        paddingHorizontal: 10,
+        paddingVertical: 6,
+        alignSelf: 'flex-start',
+    },
+    lowBatteryText: {
+        color: '#b42318',
+        fontSize: 12,
+        fontWeight: '600',
     },
     modalOverlay: {
         flex: 1,

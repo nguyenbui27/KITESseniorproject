@@ -21,27 +21,18 @@ export class Endpoint {
     }
     static User = class {
         static MyChild = "/users/my-children"
-        static GetChildById = "/api/children"
+        static GetChildById = "/children"
         static MyParent = "/users/my-parent"
-        static Create = "/api/children"
-        static Update = "/api/children"
-        static Delete = "/api/children"
-    }
-    static Mission = class {
-        static Get = "/missions/my-missions"
-        static GetById = "/missions/get"
-        static Create = "/missions/parent/create"
-        static Update = "/missions/parent/update"
-        static Complete = "/missions/child/complete"
-        static Confirm = "/missions/parent/confirm"
-        static Delete = "/missions/parent/delete"
+        static Create = "/children"
+        static Update = "/children"
+        static Delete = "/children"
     }
     static Inspector = class {
-        static Get = "/api/guardians"
-        static GetById = "/api/guardians"
-        static Create = "/api/guardians"
-        static Update = "/api/guardians"
-        static Delete = "/api/guardians"
+        static Get = "/guardians"
+        static GetById = "/guardians"
+        static Create = "/guardians"
+        static Update = "/guardians"
+        static Delete = "/guardians"
     }
     static Notification = class {
         static RegisterToken = "/device-tokens/register"
@@ -51,12 +42,6 @@ export class Endpoint {
         static Location = "/locations/add"
         static GetLocation = "/locations/family"
         static Pin = "/battery/create"
-    }
-    static BlockWeb = class {
-        static Get = "/blocked/all/web"
-        static GetByChild = "/blocked/all/web/child"
-        static Create = "/blocked/web/add"
-        static Delete = "/blocked/app/delete"
     }
     static Folder = class {
         static Get = "/folders/my-folders"

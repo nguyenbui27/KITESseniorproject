@@ -80,7 +80,10 @@ const CustomDrawerContent = ({ navigation }: any) => {
             {/* Menu items */}
             {
                 bottomNavigator.map((it, index) => {
-                    if (it.role.includes(dataProfile?.role || 'parent')) {
+                    if (!isLoading) {
+                        return null;
+                    }
+                    if (it.role.includes(dataProfile?.role || '')) {
                         return (
                             <TouchableOpacity
                                 key={index}
@@ -109,9 +112,12 @@ const DrawerMenu = () => {
 
     return (
         <Drawer.Navigator
+            id="app-drawer"
             initialRouteName={defaultRoute}
             screenOptions={{
                 headerShown: false,
+                swipeEnabled: true,
+                swipeEdgeWidth: 80,
                 drawerStyle: {
                     backgroundColor: '#4f3f97',
                     width: 260,

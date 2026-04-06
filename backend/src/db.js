@@ -5,6 +5,7 @@ const DB_PATH = path.join(__dirname, '..', 'data', 'db.json');
 
 const defaultDb = {
   users: [],
+  locations: [],
   passwordResetTokens: [],
   childAccessCodes: [],
   revokedTokens: [],
@@ -33,6 +34,7 @@ async function readDb() {
       ...defaultDb,
       ...parsed,
       users: Array.isArray(parsed.users) ? parsed.users : [],
+      locations: Array.isArray(parsed.locations) ? parsed.locations : [],
       passwordResetTokens: Array.isArray(parsed.passwordResetTokens) ? parsed.passwordResetTokens : [],
       childAccessCodes: Array.isArray(parsed.childAccessCodes) ? parsed.childAccessCodes : [],
       revokedTokens: Array.isArray(parsed.revokedTokens) ? parsed.revokedTokens : [],
