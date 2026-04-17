@@ -127,6 +127,32 @@ class UserService {
             setLoading(false);
         }
     }
+
+    async getMyNotifications(params: any, setLoading: Function) {
+        setLoading(true);
+        try {
+            const response = await RequestService.get(Endpoint.Notification.MyNotifications, params);
+            return response;
+        } catch (error: any) {
+            console.log(error);
+            throw new Error(this.extractError(error, 'Unable to load notifications'));
+        } finally {
+            setLoading(false);
+        }
+    }
+
+    async markNotificationRead(id: string, setLoading: Function) {
+        setLoading(true);
+        try {
+            const response = await RequestService.post(Endpoint.Notification.MarkRead, { id });
+            return response;
+        } catch (error: any) {
+            console.log(error);
+            throw new Error(this.extractError(error, 'Unable to update notification'));
+        } finally {
+            setLoading(false);
+        }
+    }
 }
 
 export default new UserService();

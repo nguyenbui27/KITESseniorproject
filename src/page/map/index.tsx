@@ -11,6 +11,7 @@ type ChildPin = {
     name: string;
     latitude: number;
     longitude: number;
+    address: string;
 };
 
 const MAP_REFRESH_INTERVAL_MS = 10000;
@@ -41,6 +42,7 @@ export default function MapScreen() {
                         name: String(child?.name || 'Child'),
                         latitude: lat,
                         longitude: lon,
+                        address: String(child?.latestLocation?.address || 'Address unavailable'),
                     };
                 })
                 .filter((pin: ChildPin | null): pin is ChildPin => pin !== null);
@@ -94,7 +96,7 @@ export default function MapScreen() {
                             key={pin.id}
                             coordinate={{ latitude: pin.latitude, longitude: pin.longitude }}
                             title={pin.name}
-                            description={`${pin.latitude.toFixed(6)}, ${pin.longitude.toFixed(6)}`}
+                            description={pin.address}
                         />
                     ))}
                 </MapView>

@@ -1,5 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
+    Alert,
     Image,
     Pressable,
     StyleSheet,
@@ -11,10 +12,16 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import Feather from 'react-native-vector-icons/Feather';
 import { DrawerActions, useIsFocused, useNavigation } from '@react-navigation/native';
 import authService from '../../repositories/auth/auth.service';
+import userService from '../../repositories/user/user.service';
+
+const SOS_POLL_INTERVAL_MS = 6000;
 
 const MainLayout = ({ onGoBack, isBackButton = false, title, ...props }: any) => {
     const [dataProfile, setDataProfile] = useState<any>({});
+    const [sendingSOS, setSendingSOS] = useState<boolean>(false);
     const isFocused = useIsFocused();
+    const latestSeenNotificationIdRef = useRef<string | null>(null);
+    const initializedParentNotificationsRef = useRef<boolean>(false);
 
     const navigation = useNavigation<any>();
 
@@ -52,6 +59,89 @@ const MainLayout = ({ onGoBack, isBackButton = false, title, ...props }: any) =>
         navigation.dispatch(DrawerActions.toggleDrawer());
     };
 
+    const onSendSOSAsync = async () => {
+        if (sendingSOS) {
+            return;
+        }
+        setSendingSOS(true);
+        try {
+            const response = await userService.notificationSOS(() => { });
+            Alert.alert(
+                'SOS sent',
+                `Your parent has been notified.\n\nChild: ${response?.childName || dataProfile?.name || 'Child'}\nLocation: ${response?.address || 'Address unavailable'}`,
+            );
+        } catch (error) {
+            Alert.alert('Unable to send SOS', (error as Error)?.message || 'Please try again.');
+        } finally {
+            setSendingSOS(false);
+        }
+    };
+
+    const onPressSOS = () => {
+        Alert.alert(
+            'Send SOS',
+            'Send an emergency alert to your parent now?',
+            [
+                { text: 'Cancel', style: 'cancel' },
+                { text: 'Send SOS', style: 'destructive', onPress: onSendSOSAsync },
+            ],
+        );
+    };
+
+    const checkParentSOSNotificationsAsync = useCallback(async () => {
+        if (dataProfile?.role !== 'parent') {
+            initializedParentNotificationsRef.current = false;
+            latestSeenNotificationIdRef.current = null;
+            return;
+        }
+
+        try {
+            const response = await userService.getMyNotifications({ unreadOnly: true }, () => { });
+            const notifications = Array.isArray(response?.notifications) ? response.notifications : [];
+            const newest = notifications[0];
+            const newestId = String(newest?.id || '').trim();
+
+            if (!newestId) {
+                initializedParentNotificationsRef.current = true;
+                return;
+            }
+
+            if (!initializedParentNotificationsRef.current) {
+                latestSeenNotificationIdRef.current = newestId;
+                initializedParentNotificationsRef.current = true;
+                return;
+            }
+
+            if (latestSeenNotificationIdRef.current === newestId) {
+                return;
+            }
+
+            latestSeenNotificationIdRef.current = newestId;
+            Alert.alert(
+                'SOS Alert',
+                String(newest?.message || `SOS alert from ${newest?.childName || 'Child'}. Last known location: ${newest?.address || 'Address unavailable'}.`),
+            );
+            await userService.markNotificationRead(newestId, () => { });
+        } catch (error) {
+            console.error('Failed to poll parent SOS notifications:', error);
+        }
+    }, [dataProfile?.role]);
+
+    useEffect(() => {
+        if (!isFocused || dataProfile?.role !== 'parent') {
+            return;
+        }
+
+        checkParentSOSNotificationsAsync().then(() => { });
+        const intervalId = setInterval(() => {
+            checkParentSOSNotificationsAsync().then(() => { });
+        }, SOS_POLL_INTERVAL_MS);
+
+        return () => {
+            clearInterval(intervalId);
+        };
+    }, [isFocused, dataProfile?.role, checkParentSOSNotificationsAsync]);
+
     return (
         <View style={styles.container}>
             <View style={styles.headerContainer}>
@@ -78,9 +168,7 @@ const MainLayout = ({ onGoBack, isBackButton = false, title, ...props }: any) =>
                 </View>
                 {dataProfile?.role === 'child' && (
                     <TouchableOpacity
-                        onPress={() => { }}
-                        onLongPress={() => console.log('SOS pressed')}
-                        delayLongPress={800}
+                        onPress={onPressSOS}
                         activeOpacity={0.9}
                         style={styles.sosButton}
                     >

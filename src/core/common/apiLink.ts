@@ -39,6 +39,8 @@ export class Endpoint {
         static UnregisterToken = "/device-tokens/unregister"
         static RegisterTokenEmail = "/device-tokens/register-email"
         static SOS = "/notifications/sos"
+        static MyNotifications = "/notifications/my"
+        static MarkRead = "/notifications/mark-read"
         static Location = "/locations/add"
         static GetLocation = "/locations/family"
         static Pin = "/battery/create"

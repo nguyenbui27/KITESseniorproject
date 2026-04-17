@@ -349,6 +349,19 @@ function parseCoordinate(value) {
   return Number.isFinite(parsed) ? parsed : null;
 }
 
+function parseAddress(value) {
+  if (typeof value !== 'string') {
+    return null;
+  }
+  const trimmed = value.trim();
+  return trimmed ? trimmed : null;
+}
+
+function getLocationAddress(location) {
+  const address = parseAddress(location?.address);
+  return address || 'Address unavailable';
+}
+
 function buildOtpEmailHtml({ title, code, minutes }) {
   return `
     <div style="font-family:Arial,Helvetica,sans-serif;line-height:1.5;color:#111">
@@ -947,6 +960,7 @@ const server = http.createServer(async (req, res) => {
       const latitude = parseCoordinate(body.latitude);
       const longitude = parseCoordinate(body.longitude);
       const accuracy = parseCoordinate(body.accuracy);
+      const address = parseAddress(body.address);
       const capturedAt = typeof body.capturedAt === 'string' && body.capturedAt.trim()
         ? body.capturedAt
         : new Date().toISOString();
@@ -987,6 +1001,7 @@ const server = http.createServer(async (req, res) => {
         parentId: child.parentId || auth.user.id,
         latitude,
         longitude,
+        address,
         accuracy: accuracy === null ? null : accuracy,
         capturedAt,
         updatedAt: now,
@@ -1001,6 +1016,109 @@ const server = http.createServer(async (req, res) => {
 
       await writeDb(auth.db);
       sendJson(res, 201, payload);
+      return;
+    }
+
+    if (method === 'POST' && path === '/api/notifications/sos') {
+      const auth = await requireAuth(req);
+      if (auth.error) {
+        sendJson(res, auth.status, { message: auth.error });
+        return;
+      }
+      if (auth.user.role !== 'child') {
+        sendJson(res, 403, { message: 'Only child accounts can trigger SOS' });
+        return;
+      }
+
+      const parent = auth.db.users.find(item => item.id === auth.user.parentId && item.role === 'parent');
+      if (!parent) {
+        sendJson(res, 404, { message: 'Parent not found for this child' });
+        return;
+      }
+
+      const latestLocation = getLatestLocationByChildId(auth.db, auth.user.id);
+      const address = getLocationAddress(latestLocation);
+      const createdAt = new Date().toISOString();
+      const notification = {
+        id: crypto.randomUUID(),
+        type: 'SOS',
+        parentId: parent.id,
+        childId: auth.user.id,
+        childName: auth.user.name || 'Child',
+        address,
+        latitude: latestLocation?.latitude ?? null,
+        longitude: latestLocation?.longitude ?? null,
+        message: `SOS alert from ${auth.user.name || 'Child'}. Last known location: ${address}.`,
+        createdAt,
+        readByParent: false,
+      };
+
+      if (!Array.isArray(auth.db.notifications)) {
+        auth.db.notifications = [];
+      }
+      auth.db.notifications.unshift(notification);
+      await writeDb(auth.db);
+
+      sendJson(res, 201, notification);
+      return;
+    }
+
+    if (method === 'GET' && path === '/api/notifications/my') {
+      const auth = await requireAuth(req);
+      if (auth.error) {
+        sendJson(res, auth.status, { message: auth.error });
+        return;
+      }
+
+      const items = Array.isArray(auth.db.notifications) ? auth.db.notifications : [];
+      const unreadOnly = String(url.searchParams.get('unreadOnly') || '').trim() === 'true';
+      let scoped = [];
+      if (auth.user.role === 'parent') {
+        scoped = items.filter(item => item.parentId === auth.user.id);
+      } else if (auth.user.role === 'child') {
+        scoped = items.filter(item => item.childId === auth.user.id);
+      }
+
+      const sorted = scoped
+        .sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime())
+        .filter(item => (unreadOnly ? item.readByParent === false : true));
+
+      sendJson(res, 200, {
+        notifications: sorted,
+        unreadCount: sorted.filter(item => item.readByParent === false).length,
+      });
+      return;
+    }
+
+    if (method === 'POST' && path === '/api/notifications/mark-read') {
+      const auth = await requireAuth(req);
+      if (auth.error) {
+        sendJson(res, auth.status, { message: auth.error });
+        return;
+      }
+      if (auth.user.role !== 'parent') {
+        sendJson(res, 403, { message: 'Only parent accounts can mark notifications as read' });
+        return;
+      }
+
+      const body = await parseJsonBody(req);
+      const id = String(body.id || '').trim();
+      if (!id) {
+        sendJson(res, 400, { message: 'id is required' });
+        return;
+      }
+
+      const notification = (Array.isArray(auth.db.notifications) ? auth.db.notifications : []).find(
+        item => item.id === id && item.parentId === auth.user.id,
+      );
+      if (!notification) {
+        sendJson(res, 404, { message: 'Notification not found' });
+        return;
+      }
+
+      notification.readByParent = true;
+      await writeDb(auth.db);
+      sendJson(res, 200, { message: 'Notification marked as read' });
       return;
     }
 

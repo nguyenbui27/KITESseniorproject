@@ -18,6 +18,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import Geolocation from 'react-native-geolocation-service';
 import userService from '../../infrastructure/repositories/user/user.service';
 import DeviceInfo from 'react-native-device-info';
+import { reverseGeocodeAddress } from '../../infrastructure/helper/location';
 
 const ProfileScreen = ({ navigation }: any) => {
     const [loading, setLoading] = useState<boolean>(false);
@@ -123,17 +124,19 @@ const ProfileScreen = ({ navigation }: any) => {
         const latitude = Number(position.coords.latitude);
         const longitude = Number(position.coords.longitude);
         const accuracy = Number(position.coords.accuracy || 0);
+        const address = await reverseGeocodeAddress(latitude, longitude);
         const batteryLevel = await shareBatteryAsync();
         await userService.shareLocation(
             {
                 latitude,
                 longitude,
+                address,
                 accuracy,
                 capturedAt: new Date().toISOString(),
             },
             () => { },
         );
-        return { latitude, longitude, accuracy, batteryLevel };
+        return { latitude, longitude, accuracy, batteryLevel, address };
     };
 
     const stopRealtimeSharing = () => {
@@ -161,7 +164,7 @@ const ProfileScreen = ({ navigation }: any) => {
         Geolocation.getCurrentPosition(
             async (position) => {
                 try {
-                    const { latitude, longitude, accuracy, batteryLevel } = await sharePositionAsync(position);
+                    const { latitude, longitude, accuracy, batteryLevel, address } = await sharePositionAsync(position);
                     lastSharedAtRef.current = Date.now();
                     const looksLikeDefaultEmulatorPoint =
                         Math.abs(latitude - 37.4219983) < 0.01 &&
@@ -202,7 +205,7 @@ const ProfileScreen = ({ navigation }: any) => {
                     setIsRealtimeSharing(true);
                     Alert.alert(
                         'Live location started',
-                        `Now sharing realtime location.\n\nLat: ${latitude.toFixed(6)}\nLng: ${longitude.toFixed(6)}\nAccuracy: ${Math.round(accuracy)}m${batteryLevel == null ? '' : `\nBattery: ${batteryLevel}%`}`,
+                        `Now sharing realtime location.\n\nAddress: ${address || 'Address unavailable'}\nAccuracy: ${Math.round(accuracy)}m${batteryLevel == null ? '' : `\nBattery: ${batteryLevel}%`}`,
                     );
                 } catch (error) {
                     Alert.alert('Error', (error as Error)?.message || 'Unable to start realtime sharing.');
