@@ -2,6 +2,9 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
     Alert,
     Image,
+    Linking,
+    PermissionsAndroid,
+    Platform,
     Pressable,
     StyleSheet,
     Text,
@@ -12,6 +15,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import Feather from 'react-native-vector-icons/Feather';
 import { DrawerActions, useIsFocused, useNavigation } from '@react-navigation/native';
 import authService from '../../repositories/auth/auth.service';
+import inspectorService from '../../repositories/inspector/inspector.service';
 import userService from '../../repositories/user/user.service';
 
 const SOS_POLL_INTERVAL_MS = 6000;
@@ -59,6 +63,61 @@ const MainLayout = ({ onGoBack, isBackButton = false, title, ...props }: any) =>
         navigation.dispatch(DrawerActions.toggleDrawer());
     };
 
+    const sanitizePhoneNumber = (value: string) => String(value || '').trim();
+
+    const getFirstGuardianPhoneAsync = async () => {
+        const guardians = await inspectorService.getInspector({ size: 1000 }, () => { });
+        if (!Array.isArray(guardians) || guardians.length === 0) {
+            return null;
+        }
+
+        const currentChildId = String(dataProfile?.id || '').trim();
+        const withPhone = guardians.filter((guardian: any) => sanitizePhoneNumber(guardian?.phoneNumber));
+        if (withPhone.length === 0) {
+            return null;
+        }
+
+        const matchedGuardian = withPhone.find((guardian: any) =>
+            Array.isArray(guardian?.children) &&
+            guardian.children.some((child: any) => String(child?.id || '').trim() === currentChildId),
+        );
+
+        return sanitizePhoneNumber((matchedGuardian || withPhone[0])?.phoneNumber);
+    };
+
+    const requestCallPermissionIfNeededAsync = async () => {
+        if (Platform.OS !== 'android') {
+            return true;
+        }
+
+        const granted = await PermissionsAndroid.request(
+            PermissionsAndroid.PERMISSIONS.CALL_PHONE,
+            {
+                title: 'Phone call permission',
+                message: 'Allow call permission so SOS can immediately call your guardian.',
+                buttonPositive: 'Allow',
+                buttonNegative: 'Deny',
+                buttonNeutral: 'Later',
+            },
+        );
+        return granted === PermissionsAndroid.RESULTS.GRANTED;
+    };
+
+    const callFirstGuardianAsync = async () => {
+        const phoneNumber = await getFirstGuardianPhoneAsync();
+        if (!phoneNumber) {
+            return { called: false, message: 'SOS sent, but no guardian phone number is available.' };
+        }
+
+        const hasPermission = await requestCallPermissionIfNeededAsync();
+        if (!hasPermission) {
+            return { called: false, message: 'SOS sent, but call permission was denied.' };
+        }
+
+        await Linking.openURL(`tel:${phoneNumber}`);
+        return { called: true, message: `Calling first guardian: ${phoneNumber}` };
+    };
+
     const onSendSOSAsync = async () => {
         if (sendingSOS) {
             return;
@@ -66,9 +125,10 @@ const MainLayout = ({ onGoBack, isBackButton = false, title, ...props }: any) =>
         setSendingSOS(true);
         try {
             const response = await userService.notificationSOS(() => { });
+            const callResult = await callFirstGuardianAsync();
             Alert.alert(
                 'SOS sent',
-                `Your parent has been notified.\n\nChild: ${response?.childName || dataProfile?.name || 'Child'}\nLocation: ${response?.address || 'Address unavailable'}`,
+                `Your parent has been notified.\n\nChild: ${response?.childName || dataProfile?.name || 'Child'}\nLocation: ${response?.address || 'Address unavailable'}\n${callResult.message}`,
             );
         } catch (error) {
             Alert.alert('Unable to send SOS', (error as Error)?.message || 'Please try again.');
